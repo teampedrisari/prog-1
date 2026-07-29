@@ -992,9 +992,35 @@ let encKey = null;        // in-memory CryptoKey derived from passphrase, per se
 
 function getSbConfig(){ return { url: localStorage.getItem('cfo_sb_url')||'', key: localStorage.getItem('cfo_sb_key')||'' }; }
 function isSbConfigured(){ const c=getSbConfig(); return !!(c.url && c.key); }
+function normalizeSbUrl(u){
+  u=(u||'').trim();
+  if (u && !/^https?:\/\//i.test(u)) u='https://'+u;   // add protocol if missing
+  u=u.replace(/\/+$/,'');                                // strip trailing slash(es)
+  u=u.replace(/\/(auth|rest)\/v1.*$/i,'');               // strip if user pasted a sub-path by mistake
+  return u;
+}
+// Reads whatever is currently typed in the Settings fields and persists it,
+// so Auth buttons work even if the user hasn't clicked "Salva" yet.
+function syncSbInputsToStorage(){
+  const urlIn=el('sb-url'), keyIn=el('sb-key');
+  if (!urlIn && !keyIn) return getSbConfig();
+  const url=normalizeSbUrl(urlIn?.value), key=(keyIn?.value||'').trim();
+  if (urlIn) urlIn.value=url;
+  const prev=getSbConfig();
+  if (url) localStorage.setItem('cfo_sb_url', url);
+  if (key) localStorage.setItem('cfo_sb_key', key);
+  if (url!==prev.url || key!==prev.key) { supaClient=null; authSession=null; encKey=null; }
+  return { url: url||prev.url, key: key||prev.key };
+}
 function getSupa(){
+  syncSbInputsToStorage();
   if (!isSbConfigured() || typeof supabase==='undefined') return null;
-  if (!supaClient) { const c=getSbConfig(); supaClient = supabase.createClient(c.url, c.key); }
+  const c=getSbConfig();
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(c.url)) {
+    toast('Project URL non valido. Deve avere la forma esatta https://xxxxx.supabase.co (senza spazi o testo extra)','error');
+    return null;
+  }
+  if (!supaClient) { supaClient = supabase.createClient(c.url, c.key); }
   return supaClient;
 }
 function isSyncReady(){ return isSbConfigured() && !!authSession && !!encKey; }
@@ -1007,7 +1033,7 @@ async function refreshSession(){
   updateAuthStatusUI();
 }
 async function doSignUp(){
-  const sb=getSupa(); if(!sb){ toast('Inserisci prima URL e anon key Supabase','error'); return; }
+  const sb=getSupa(); if(!sb){ if(!isSbConfigured()) toast('Inserisci prima URL e anon key Supabase','error'); return; }
   const email=(el('auth-email')?.value||'').trim(), pass=el('auth-pass')?.value||'';
   if(!email||pass.length<6){ toast('Email valida e password di almeno 6 caratteri','error'); return; }
   const { data, error } = await sb.auth.signUp({ email, password: pass });
@@ -1017,7 +1043,7 @@ async function doSignUp(){
   updateAuthStatusUI();
 }
 async function doSignIn(){
-  const sb=getSupa(); if(!sb){ toast('Inserisci prima URL e anon key Supabase','error'); return; }
+  const sb=getSupa(); if(!sb){ if(!isSbConfigured()) toast('Inserisci prima URL e anon key Supabase','error'); return; }
   const email=(el('auth-email')?.value||'').trim(), pass=el('auth-pass')?.value||'';
   if(!email||!pass){ toast('Inserisci email e password','error'); return; }
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
