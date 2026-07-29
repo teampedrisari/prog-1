@@ -1014,15 +1014,22 @@ function normalizeSbUrl(u){
 }
 // Reads whatever is currently typed in the Settings fields and persists it,
 // so Auth buttons work even if the user hasn't clicked "Salva" yet.
+// IMPORTANT: if the fields are empty (e.g. Settings was never opened this page-load),
+// that must NOT be treated as "the user cleared the config" — otherwise every
+// getSupa() call would wipe an already-restored session right after a refresh.
 function syncSbInputsToStorage(){
   const urlIn=el('sb-url'), keyIn=el('sb-key');
-  if (!urlIn && !keyIn) return getSbConfig();
-  const url=normalizeSbUrl(urlIn?.value), key=(keyIn?.value||'').trim();
-  if (urlIn) urlIn.value=url;
   const prev=getSbConfig();
-  if (url) localStorage.setItem('cfo_sb_url', url);
-  if (key) localStorage.setItem('cfo_sb_key', key);
-  if (url!==prev.url || key!==prev.key) { supaClient=null; authSession=null; encKey=null; }
+  if (!urlIn && !keyIn) return prev;
+  const typedUrl=(urlIn?.value||'').trim(), typedKey=(keyIn?.value||'').trim();
+  if (!typedUrl && !typedKey) return prev;  // fields untouched/empty this session — don't reset anything
+  const url = typedUrl ? normalizeSbUrl(typedUrl) : prev.url;
+  const key = typedKey || prev.key;
+  if (urlIn && typedUrl) urlIn.value=url;
+  const changed = (url && url!==prev.url) || (key && key!==prev.key);
+  if (url && url!==prev.url) localStorage.setItem('cfo_sb_url', url);
+  if (key && key!==prev.key) localStorage.setItem('cfo_sb_key', key);
+  if (changed) { supaClient=null; authSession=null; encKey=null; }
   return { url: url||prev.url, key: key||prev.key };
 }
 function getSupa(){
@@ -1157,15 +1164,16 @@ async function decryptPayload(enc_data, ivB64, saltB64){
 // ── Push / Pull / Sync (offline-first, last-write-wins by timestamp) ──
 function updateSyncStatus(state){
   const d=el('sync-dot'), l=el('sync-lbl'); if(!d||!l) return;
+  const who = authSession ? (' · '+authSession.user.email) : '';
   if (!isSbConfigured()) { d.className='api-dot'; l.textContent='Sync non configurato'; return; }
   if (!authSession) { d.className='api-dot'; l.textContent='Non hai eseguito l\'accesso'; return; }
-  if (!encKey) { d.className='api-dot'; l.textContent='Passphrase mancante'; return; }
-  if (state==='syncing') { d.className='api-dot'; l.textContent='Sincronizzazione...'; return; }
-  if (state==='error') { d.className='api-dot'; l.textContent='Sync fallito (offline?)'; return; }
-  if (!navigator.onLine) { d.className='api-dot'; l.textContent='Offline — dati locali'; return; }
+  if (!encKey) { d.className='api-dot'; l.textContent='Passphrase mancante'+who; return; }
+  if (state==='syncing') { d.className='api-dot'; l.textContent='Sincronizzazione...'+who; return; }
+  if (state==='error') { d.className='api-dot'; l.textContent='Sync fallito (offline?)'+who; return; }
+  if (!navigator.onLine) { d.className='api-dot'; l.textContent='Offline — dati locali'+who; return; }
   d.className='api-dot on';
   const last=localStorage.getItem('cfo_last_sync');
-  l.textContent = last ? ('Sincronizzato ' + new Date(parseInt(last)).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})) : 'Sync attivo';
+  l.textContent = (last ? ('Sincronizzato ' + new Date(parseInt(last)).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})) : 'Sync attivo') + who;
 }
 function schedulePush(){
   if (!isSyncReady()) return;
@@ -2183,6 +2191,9 @@ function init(){
 
   updateApiStatus();
   updateSyncStatus();
+  const sbc=getSbConfig();
+  const sburl=el('sb-url'); if(sburl) sburl.value=sbc.url;
+  const sbkey=el('sb-key'); if(sbkey) sbkey.value=sbc.key;
   populateCatF();
   navigate('dashboard'); // sets activePage, shows topbar controls, then calls renderDash()
 
