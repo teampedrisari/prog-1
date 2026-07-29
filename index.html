@@ -849,6 +849,7 @@ a { color: inherit; text-decoration: none; }
       <button type="button" class="btn btn-p" style="flex:1" onclick="doSignIn()">Accedi</button>
       <button type="button" class="btn btn-g" onclick="doSignOut()">Esci</button>
     </div>
+    <button type="button" class="sb-vnext" style="text-align:left;margin-top:6px;padding:2px" onclick="doResetPassword()">Password dimenticata? Invia email di reset →</button>
   </div>
 
   <div class="fg"><label class="fl">🔒 Passphrase di cifratura (protegge il contenuto dei dati)</label>
@@ -949,6 +950,14 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="fg"><label class="fl">Oppure incolla il JSON manualmente</label><textarea class="fta" id="import-json" placeholder="Incolla qui il JSON esportato..." rows="6"></textarea></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-import')">Annulla</button><button class="btn btn-d" onclick="importData()">⚠️ Importa e Sovrascrivi</button></div>
+</div></div>
+
+<div class="overlay" id="m-newpass"><div class="modal">
+  <div class="modal-title">🔐 Imposta una nuova password</div>
+  <div class="alert al-i mb12"><span class="ai">ℹ️</span><span>Hai cliccato il link ricevuto via email. Scegli la tua nuova password d'accesso.</span></div>
+  <div class="fg"><label class="fl">Nuova password</label><input type="password" class="fi" id="newpass1" placeholder="Almeno 6 caratteri" autocomplete="new-password"></div>
+  <div class="fg"><label class="fl">Conferma nuova password</label><input type="password" class="fi" id="newpass2" placeholder="Ripeti la password" autocomplete="new-password"></div>
+  <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-newpass')">Annulla</button><button class="btn btn-p" onclick="doSetNewPassword()">Salva nuova password</button></div>
 </div></div>
 
 <script>
@@ -1059,6 +1068,35 @@ async function doSignIn(){
 async function doSignOut(){
   const sb=getSupa(); if(sb) await sb.auth.signOut();
   authSession=null; encKey=null; updateAuthStatusUI(); updateSyncStatus(); toast('Disconnesso','info');
+}
+async function doResetPassword(){
+  const sb=getSupa(); if(!sb){ if(!isSbConfigured()) toast('Inserisci prima URL e anon key Supabase','error'); return; }
+  const email=(el('auth-email')?.value||'').trim();
+  if(!email){ toast('Scrivi la tua email nel campo sopra, poi clicca di nuovo qui','error'); return; }
+  const redirectTo = window.location.origin + window.location.pathname;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) { toast('Errore invio email: '+error.message,'error'); return; }
+  toast('Email inviata ✉️ — apri il link ricevuto per impostare una nuova password','success');
+}
+async function doSetNewPassword(){
+  const sb=getSupa(); if(!sb) return;
+  const p1=el('newpass1')?.value||'', p2=el('newpass2')?.value||'';
+  if (p1.length<6) { toast('La password deve avere almeno 6 caratteri','error'); return; }
+  if (p1!==p2) { toast('Le due password non coincidono','error'); return; }
+  const { data, error } = await sb.auth.updateUser({ password: p1 });
+  if (error) { toast('Errore: '+error.message,'error'); return; }
+  authSession = data?.session || authSession; updateAuthStatusUI();
+  closeModal('m-newpass');
+  toast('Password aggiornata ✅ Ora puoi accedere con la nuova password','success');
+}
+// Watch for Supabase auth events, including the password-recovery link redirect.
+function wireAuthListener(){
+  const sb=getSupa(); if(!sb) return;
+  sb.auth.onAuthStateChange((event, session)=>{
+    if (event==='PASSWORD_RECOVERY') { openModal('m-newpass'); }
+    else if (event==='SIGNED_IN') { authSession=session; updateAuthStatusUI(); }
+    else if (event==='SIGNED_OUT') { authSession=null; updateAuthStatusUI(); }
+  });
 }
 function updateAuthStatusUI(){
   const box=el('auth-status'); if(!box) return;
@@ -2042,7 +2080,7 @@ async function saveSettings(){
   if (cfgChanged) { supaClient=null; authSession=null; encKey=null; }
   persist();updateApiStatus();updateSyncStatus();closeModal('m-api');
   toast(k?'Impostazioni salvate — CFO AI attivo ✅':'Impostazioni salvate','success');
-  if (sbUrl && sbKey && cfgChanged) { await autoRestoreSync(); }
+  if (sbUrl && sbKey && cfgChanged) { wireAuthListener(); await autoRestoreSync(); }
 }
 function updateApiStatus(){const k=getKey();const d=el('api-dot');const l=el('api-lbl');if(d)d.className='api-dot'+(k?' on':'');if(l)l.textContent=k?'CFO AI attivo':'API Key non configurata';}
 
@@ -2152,6 +2190,9 @@ function init(){
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
   }
+
+  // Watch auth events (login/logout/password-recovery link) as soon as Supabase is configured
+  if (isSbConfigured()) { wireAuthListener(); }
 
   // Pull latest from cloud on startup if configured (offline-safe: fails silently)
   if (isSbConfigured() && navigator.onLine) {
