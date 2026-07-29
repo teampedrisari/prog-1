@@ -943,7 +943,11 @@ a { color: inherit; text-decoration: none; }
 <div class="overlay" id="m-import"><div class="modal">
   <div class="modal-title">Importa Dati</div>
   <div class="alert al-w mb12"><span class="ai">⚠️</span><span>Sovrascriverà tutti i dati. Esegui prima un backup!</span></div>
-  <div class="fg"><label class="fl">JSON Backup</label><textarea class="fta" id="import-json" placeholder="Incolla qui il JSON esportato..." rows="8"></textarea></div>
+  <div class="fg"><label class="fl">Scegli il file di backup (.json)</label>
+    <input type="file" accept=".json,application/json" class="fi" id="import-file" onchange="handleImportFile(event)">
+    <div id="import-file-status" class="steward-note" style="margin-top:6px"></div>
+  </div>
+  <div class="fg"><label class="fl">Oppure incolla il JSON manualmente</label><textarea class="fta" id="import-json" placeholder="Incolla qui il JSON esportato..." rows="6"></textarea></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-import')">Annulla</button><button class="btn btn-d" onclick="importData()">⚠️ Importa e Sovrascrivi</button></div>
 </div></div>
 
@@ -2044,7 +2048,30 @@ function updateApiStatus(){const k=getKey();const d=el('api-dot');const l=el('ap
 
 // ── DATA ──────────────────────────────────────────────────
 function exportData(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`cfo-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();toast('Backup esportato','success');}
-function importData(){try{const d=JSON.parse(el('import-json').value);if(!d.transactions||!d.goals)throw new Error('Formato non valido');S=d;persist();closeModal('m-import');toast('Dati importati!','success');navigate(activePage);}catch(e){toast('JSON non valido: '+e.message,'error');}}
+function handleImportFile(evt){
+  const file=evt.target.files?.[0]; const status=el('import-file-status');
+  if(!file) return;
+  if(status) status.textContent='Lettura di "'+file.name+'"...';
+  const reader=new FileReader();
+  reader.onload=()=>{ el('import-json').value=reader.result; if(status) status.textContent='✅ File caricato: "'+file.name+'" — pronto per l\'importazione.'; };
+  reader.onerror=()=>{ if(status) status.textContent='❌ Impossibile leggere il file.'; };
+  reader.readAsText(file, 'UTF-8');
+}
+function importData(){
+  const raw=el('import-json').value.trim();
+  if(!raw){ toast('Scegli un file o incolla il JSON da importare','error'); return; }
+  let d;
+  try{ d=JSON.parse(raw); }
+  catch(e){ toast('JSON non valido: il file non è formattato correttamente ('+e.message+')','error'); return; }
+  if(typeof d!=='object'||d===null||Array.isArray(d)){ toast('Formato non valido: il file non contiene un backup CFO Personale riconoscibile','error'); return; }
+  if(!('transactions' in d)||!('goals' in d)){ toast('Formato non valido: mancano i campi attesi (transactions/goals) — è un backup di CFO Personale?','error'); return; }
+  S=d;
+  if(S.updatedAt==null) S.updatedAt=Date.now();
+  persist();closeModal('m-import');toast('Dati importati!','success');navigate(activePage);
+  if(el('import-json'))el('import-json').value='';
+  if(el('import-file-status'))el('import-file-status').textContent='';
+  if(el('import-file'))el('import-file').value='';
+}
 
 // ── CHAT ──────────────────────────────────────────────────
 function updateChatCtx(){
