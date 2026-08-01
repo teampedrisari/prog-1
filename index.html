@@ -438,15 +438,31 @@ a { color: inherit; text-decoration: none; }
 /* ── RESPONSIVE ── */
 @media(max-width:1100px) { .g4 { grid-template-columns: 1fr 1fr; } .chat-info { display: none; } }
 @media(max-width:860px) { .g3 { grid-template-columns: 1fr 1fr; } .g2 { grid-template-columns: 1fr; } }
+.card:has(table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media(max-width:640px) {
   :root { --sb-w: 0px; }
-  .sidebar { transform: translateX(-100%); transition: transform .22s ease; width: 232px; }
+  .sidebar { transform: translateX(-100%); transition: transform .22s ease; width: 84vw; max-width: 300px; }
   .sidebar.open { transform: none; }
   .app-body { margin-left: 0; }
   .mob-btn { display: block !important; }
   .g4, .g3 { grid-template-columns: 1fr; }
-  .pg-wrap { padding: 14px; }
-  .topbar { padding: 0 14px; }
+  .pg-wrap { padding: 12px 12px 84px; }
+  .topbar { padding: 0 10px; gap: 6px; }
+  .topbar-r { gap: 6px; }
+  .topbar-title { font-size: 14px; }
+  #mlabel { display: none !important; }
+  .btn-cta { padding: 9px 12px; font-size: 12.5px; }
+  /* Prevent iOS Safari from auto-zooming when a field is focused (needs >=16px) */
+  .fi, .fs, .fta, input, select, textarea { font-size: 16px !important; }
+  /* Comfortable ≥44px touch targets for buttons, selects and table actions */
+  .btn, .fs, .fi, .fta { min-height: 44px; }
+  .btn-xs { min-height: 34px; padding: 6px 10px; }
+  .btn-sm { min-height: 38px; }
+  .tbl th, .tbl td { padding: 10px 8px; font-size: 12.5px; }
+  .modal { width: 94%; max-height: 92vh; padding: 18px; border-radius: var(--r-lg); }
+  .modal-foot { position: sticky; bottom: -18px; background: var(--surf); margin: 12px -18px -18px; padding: 12px 18px; border-top: 1px solid var(--border); }
+  .g2 { grid-template-columns: 1fr; }
+  .card { padding: 14px; }
 }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
 </style>
@@ -517,8 +533,8 @@ a { color: inherit; text-decoration: none; }
       <span id="mlabel" class="f12 c-su" style="min-width:115px;text-align:center;display:none"></span>
       <button class="btn btn-g btn-sm" id="btn-next" onclick="chMonth(1)" style="display:none" aria-label="Mese successivo">→</button>
       <select class="fs" id="cb" style="width:80px;display:none" onchange="onCbChange()" aria-label="Valuta">
-        <option value="USD" selected>$ USD</option>
-        <option value="GTQ">Q GTQ</option>
+        <option value="USD">$ USD</option>
+        <option value="GTQ" selected>Q GTQ</option>
         <option value="EUR">€ EUR</option>
       </select>
       <button class="btn-cta" onclick="openAddTx()">+ Aggiungi</button>
@@ -738,7 +754,7 @@ a { color: inherit; text-decoration: none; }
       <div class="fg"><label class="fl">Beneficiario</label><select class="fs" id="don-qben"><option value="">— Seleziona —</option></select></div>
       <div class="g2">
         <div class="fg"><label class="fl">Importo</label><div class="fi-wrap"><span class="pfx" id="don-qpfx">$</span><input type="number" class="fi" id="don-qamt" placeholder="0.00" min="0" step="0.01"></div></div>
-        <div class="fg"><label class="fl">Valuta</label><select class="fs" id="don-qcur" onchange="el('don-qpfx').textContent=CUR_SYM[this.value]||'$'"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div>
+        <div class="fg"><label class="fl">Valuta</label><select class="fs" id="don-qcur" onchange="el('don-qpfx').textContent=CUR_SYM[this.value]||'$'"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div>
       </div>
       <div class="fg"><label class="fl">Data</label><input type="date" class="fi" id="don-qdate"></div>
       <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="don-qnote" placeholder="es. domenica, progetto X..."></div>
@@ -864,11 +880,14 @@ a { color: inherit; text-decoration: none; }
 <div class="overlay" id="m-tx"><div class="modal modal-lg">
   <div class="modal-title" id="m-tx-ttl">Nuova Transazione</div>
   <div class="g2"><div class="fg"><label class="fl">Tipo</label><select class="fs" id="tx-type" onchange="txTypeChange()"><option value="income">📥 Entrata</option><option value="expense">📤 Uscita</option><option value="investment">💼 Investimento</option></select></div><div class="fg"><label class="fl">Data</label><input type="date" class="fi" id="tx-date"></div></div>
-  <div class="fg"><label class="fl">Descrizione</label><input type="text" class="fi" id="tx-desc" placeholder="es. Freelance cliente X, Affitto..."></div>
-  <div class="g2"><div class="fg"><label class="fl">Categoria</label><select class="fs" id="tx-cat"></select></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="tx-cur"><option value="USD">🇺🇸 USD</option><option value="GTQ">🇬🇹 GTQ</option><option value="EUR">🇪🇺 EUR</option></select></div></div>
-  <div class="g2"><div class="fg"><label class="fl">Importo</label><div class="fi-wrap"><span class="pfx" id="tx-pfx">$</span><input type="number" class="fi" id="tx-amt" placeholder="0.00" min="0" step="0.01"></div></div><div class="fg"><label class="fl">Ricorrente</label><select class="fs" id="tx-rec"><option value="">No</option><option value="monthly">Mensile</option><option value="weekly">Settimanale</option></select></div></div>
-  <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="tx-note" placeholder="Dettagli, riferimento fattura..."></div>
-  <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-tx')">Annulla</button><button class="btn btn-p" onclick="saveTx()">Salva</button></div>
+  <div class="fg"><label class="fl">Descrizione</label><input type="text" class="fi" id="tx-desc" list="tx-desc-list" placeholder="es. Freelance cliente X, Affitto..." onchange="txDescAutofill()" onkeydown="if(event.key==='Enter'){event.preventDefault();el('tx-amt').focus();}"><datalist id="tx-desc-list"></datalist></div>
+  <div class="g2"><div class="fg"><label class="fl">Categoria</label><select class="fs" id="tx-cat"></select></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="tx-cur"><option value="USD">🇺🇸 USD</option><option value="GTQ" selected>🇬🇹 GTQ</option><option value="EUR">🇪🇺 EUR</option></select></div></div>
+  <div class="g2"><div class="fg"><label class="fl">Importo</label><div class="fi-wrap"><span class="pfx" id="tx-pfx">Q</span><input type="number" class="fi" id="tx-amt" placeholder="0.00" min="0" step="0.01" onkeydown="if(event.key==='Enter'){event.preventDefault();saveTx();}"></div></div><div class="fg"><label class="fl">Ricorrente</label><select class="fs" id="tx-rec"><option value="">No</option><option value="monthly">Mensile</option><option value="weekly">Settimanale</option></select></div></div>
+  <div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="tx-note" placeholder="Dettagli, riferimento fattura..." onkeydown="if(event.key==='Enter'){event.preventDefault();saveTx();}"></div>
+  <div class="modal-foot">
+    <button class="btn btn-g" onclick="closeModal('m-tx')" id="tx-btn-close">Chiudi</button>
+    <button class="btn btn-p" onclick="saveTx()" id="tx-btn-save">Salva</button>
+  </div>
 </div></div>
 
 <div class="overlay" id="m-goal"><div class="modal">
@@ -878,14 +897,14 @@ a { color: inherit; text-decoration: none; }
   <div class="fg"><label class="fl">Perché?</label><input class="fi" id="g-desc" placeholder="es. Per la sicurezza della famiglia..."></div>
   <div class="fg"><label class="fl">Allineamento Spirituale</label><select class="fs" id="g-align"><option value="personal">🙋 Personale / Famiglia</option><option value="service">🤝 Servizio agli altri</option><option value="ministry">⛪ Ministero / Chiesa</option><option value="business">💼 Business / Lavoro</option><option value="emergency">🛡️ Fondo Emergenza</option><option value="education">📚 Formazione / Crescita</option></select></div>
   <div class="g2"><div class="fg"><label class="fl">Target</label><input type="number" class="fi" id="g-target" placeholder="0.00"></div><div class="fg"><label class="fl">Già Risparmiato</label><input type="number" class="fi" id="g-curr" placeholder="0.00"></div></div>
-  <div class="g2"><div class="fg"><label class="fl">Valuta</label><select class="fs" id="g-cur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div><div class="fg"><label class="fl">Data Target</label><input type="date" class="fi" id="g-date"></div></div>
+  <div class="g2"><div class="fg"><label class="fl">Valuta</label><select class="fs" id="g-cur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div><div class="fg"><label class="fl">Data Target</label><input type="date" class="fi" id="g-date"></div></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-goal')">Annulla</button><button class="btn btn-p" onclick="saveGoal()">Crea</button></div>
 </div></div>
 
 <div class="overlay" id="m-inv"><div class="modal">
   <div class="modal-title" id="m-inv-ttl">Aggiungi Asset</div>
   <div class="fg"><label class="fl">Nome Asset</label><input class="fi" id="inv-name" placeholder="es. Bitcoin, VOO ETF, CD Banrural..."></div>
-  <div class="g2"><div class="fg"><label class="fl">Tipo</label><select class="fs" id="inv-type"><option value="crypto">₿ Crypto</option><option value="etf">📈 ETF / Fondi</option><option value="savings">🏦 Risparmio / CD</option><option value="stocks">📊 Azioni</option><option value="bonds">📄 Obbligazioni</option><option value="real_estate">🏠 Immobiliare</option><option value="other">📦 Altro</option></select></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="inv-cur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div></div>
+  <div class="g2"><div class="fg"><label class="fl">Tipo</label><select class="fs" id="inv-type"><option value="crypto">₿ Crypto</option><option value="etf">📈 ETF / Fondi</option><option value="savings">🏦 Risparmio / CD</option><option value="stocks">📊 Azioni</option><option value="bonds">📄 Obbligazioni</option><option value="real_estate">🏠 Immobiliare</option><option value="other">📦 Altro</option></select></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="inv-cur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div></div>
   <div class="g2"><div class="fg"><label class="fl">Valore Attuale</label><input type="number" class="fi" id="inv-val" placeholder="0.00"></div><div class="fg"><label class="fl">Costo Acquisto</label><input type="number" class="fi" id="inv-cost" placeholder="0.00"></div></div>
   <div class="fg"><label class="fl">Piattaforma / Note</label><input class="fi" id="inv-note" placeholder="es. Binance, Interactive Brokers..."></div>
   <div class="fg"><label class="fl">Considerazione Etica</label><select class="fs" id="inv-ethics"><option value="ok">✅ Nessuna preoccupazione</option><option value="review">🤔 Da verificare</option><option value="speculative">⚠️ Speculativo</option><option value="excluded">❌ Escluso per motivi etici</option></select><div class="steward-note mt4">"Chi ha fretta di arricchirsi non rimarrà impunito." — Proverbi 28:20</div></div>
@@ -895,7 +914,7 @@ a { color: inherit; text-decoration: none; }
 <div class="overlay" id="m-debt"><div class="modal">
   <div class="modal-title">Nuovo Debito</div>
   <div class="fg"><label class="fl">Nome</label><input class="fi" id="dbt-name" placeholder="es. Prestito auto, Carta..."></div>
-  <div class="g2"><div class="fg"><label class="fl">Importo Totale</label><input type="number" class="fi" id="dbt-tot" placeholder="0.00"></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="dbt-cur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div></div>
+  <div class="g2"><div class="fg"><label class="fl">Importo Totale</label><input type="number" class="fi" id="dbt-tot" placeholder="0.00"></div><div class="fg"><label class="fl">Valuta</label><select class="fs" id="dbt-cur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div></div>
   <div class="g2"><div class="fg"><label class="fl">Tasso % annuo</label><input type="number" class="fi" id="dbt-rate" placeholder="0.0" step="0.1"></div><div class="fg"><label class="fl">Rata Mensile</label><input type="number" class="fi" id="dbt-pay" placeholder="0.00"></div></div>
   <div class="fg"><label class="fl">Creditore</label><input class="fi" id="dbt-cred" placeholder="es. Banrural, HSBC..."></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-debt')">Annulla</button><button class="btn btn-p" onclick="saveDebt()">Salva</button></div>
@@ -907,13 +926,13 @@ a { color: inherit; text-decoration: none; }
   <div class="fg"><label class="fl">Nome</label><input class="fi" id="bn-name" placeholder="es. Casa Hogar Esperanza, Parrocchia..."></div>
   <div class="fg"><label class="fl">Descrizione</label><input class="fi" id="bn-desc" placeholder="Cosa fanno, perché ti sta a cuore..."></div>
   <div class="fg"><label class="fl">Sito web</label><input class="fi" id="bn-url" placeholder="https://" type="url"></div>
-  <div class="fg"><label class="fl">Importo mensile suggerito</label><div class="g2"><input type="number" class="fi" id="bn-sugg" placeholder="0.00" min="0" step="0.01"><select class="fs" id="bn-scur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div></div>
+  <div class="fg"><label class="fl">Importo mensile suggerito</label><div class="g2"><input type="number" class="fi" id="bn-sugg" placeholder="0.00" min="0" step="0.01"><select class="fs" id="bn-scur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-ben')">Annulla</button><button class="btn btn-p" onclick="saveBen()">Salva</button></div>
 </div></div>
 
 <div class="overlay" id="m-don-bud"><div class="modal">
   <div class="modal-title">Budget Mensile Donazioni</div>
-  <div class="fg"><label class="fl">Budget mensile</label><div class="g2"><input type="number" class="fi" id="don-bamt" placeholder="0.00" min="0" step="0.01"><select class="fs" id="don-bcur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div></div>
+  <div class="fg"><label class="fl">Budget mensile</label><div class="g2"><input type="number" class="fi" id="don-bamt" placeholder="0.00" min="0" step="0.01"><select class="fs" id="don-bcur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-don-bud')">Annulla</button><button class="btn btn-p" onclick="saveDonBud()">Salva</button></div>
 </div></div>
 
@@ -930,7 +949,7 @@ a { color: inherit; text-decoration: none; }
   <div class="fg"><label class="fl">Categoria</label><select class="fs" id="gr-cat"><option value="provision">🙏 Provvidenza inaspettata</option><option value="saving">💰 Risparmio miracoloso</option><option value="gift">🎁 Dono ricevuto</option><option value="work">💼 Nuovo lavoro / cliente</option><option value="wisdom">💡 Saggezza finanziaria</option><option value="protection">🛡️ Protezione (spesa evitata)</option><option value="prayer">🕊️ Risposta a preghiera</option><option value="guidance">🧭 Guida in una decisione</option><option value="community">🤝 Aiuto dalla comunità</option><option value="other">✨ Altro</option></select></div>
   <div class="fg"><label class="fl">Data</label><input type="date" class="fi" id="gr-date"></div>
   <div class="fg"><label class="fl">Racconta</label><textarea class="fta" id="gr-text" rows="4" placeholder="Descrivi liberamente il momento di grazia..."></textarea></div>
-  <div class="fg"><label class="fl">Importo (se rilevante)</label><div class="g2"><input type="number" class="fi" id="gr-amt" placeholder="0.00 (opzionale)" min="0" step="0.01"><select class="fs" id="gr-cur"><option value="USD">USD</option><option value="GTQ">GTQ</option><option value="EUR">EUR</option></select></div></div>
+  <div class="fg"><label class="fl">Importo (se rilevante)</label><div class="g2"><input type="number" class="fi" id="gr-amt" placeholder="0.00 (opzionale)" min="0" step="0.01"><select class="fs" id="gr-cur"><option value="USD">USD</option><option value="GTQ" selected>GTQ</option><option value="EUR">EUR</option></select></div></div>
   <div class="modal-foot"><button class="btn btn-g" onclick="closeModal('m-gr')">Annulla</button><button class="btn btn-e" onclick="saveGratitudine()">💚 Salva</button></div>
 </div></div>
 
@@ -970,7 +989,7 @@ a { color: inherit; text-decoration: none; }
 const STORE = 'cfo_v7';
 function defaultState() {
   return { transactions:[], goals:[], investments:[], beneficiari:[],
-    donBudget:{amount:0,currency:'USD'}, debts:[], journal:[], quarterly:[],
+    donBudget:{amount:0,currency:'GTQ'}, debts:[], journal:[], quarterly:[],
     snapshots:[], // [{invId, ym:'YYYY-MM', valueUSD}]
     satRegime:'pequeno', tithePct:10, fxRates:{GTQ:7.75,EUR:0.920}, version:7 };
 }
@@ -991,6 +1010,24 @@ function persist() {
   S.updatedAt = Date.now();
   try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e) { toast('Storage pieno?','error'); }
   schedulePush();
+  refreshActivePage();
+}
+// Single source of truth for "live refresh": whichever page is on screen right
+// now gets re-rendered from the current state S. Called by persist(), so every
+// save/delete/import/sync anywhere in the app updates whatever the user is
+// looking at — no manual reload needed, on any page.
+function refreshActivePage(){
+  switch (activePage) {
+    case 'dashboard':   renderDash(); break;
+    case 'transazioni': renderTx(); break;
+    case 'obiettivi':   renderGoals(); break;
+    case 'portafoglio': renderPortfolio(); break;
+    case 'sat':         renderSat(); break;
+    case 'debiti':      renderDebiti(); break;
+    case 'donazioni':   renderDon(); break;
+    case 'gratitudine': renderGratitudine(); break;
+    // 'chat' has no data grid to refresh
+  }
 }
 function getKey() { return localStorage.getItem('cfo_key') || ''; }
 
@@ -1333,7 +1370,7 @@ function prevMon(ym){const[y,m]=ym.split('-').map(Number);const d=new Date(y,m-2
 function monName(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function curQ(){const n=new Date();return`${n.getFullYear()}-Q${Math.floor(n.getMonth()/3)+1}`;}
-function getBase(){return el('cb')?.value||'USD';}
+function getBase(){return el('cb')?.value||'GTQ';}
 
 // Called when the currency selector changes — re-renders whichever page is active
 function onCbChange(){
@@ -1523,24 +1560,58 @@ function chartDefs(base){
 function openAddTx(id=null){
   editTxId=id;
   el('m-tx-ttl').textContent=id?'✏️ Modifica Transazione':'Nuova Transazione';
-  if(id){const tx=S.transactions.find(t=>t.id===id);if(!tx)return;el('tx-type').value=tx.type;txTypeChange();el('tx-cat').value=tx.category;el('tx-date').value=tx.date;el('tx-desc').value=tx.description;el('tx-cur').value=tx.currency;el('tx-amt').value=tx.amount;el('tx-note').value=tx.note||'';el('tx-rec').value=tx.recurring||'';}
-  else{el('tx-type').value='expense';txTypeChange();el('tx-date').value=new Date().toISOString().slice(0,10);['tx-desc','tx-amt','tx-note'].forEach(i=>el(i).value='');el('tx-cur').value='USD';el('tx-rec').value='';}
-  el('tx-pfx').textContent=CUR_SYM[el('tx-cur').value]||'$';
+  if(id){const tx=S.transactions.find(t=>t.id===id);if(!tx)return;el('tx-type').value=tx.type;txTypeChange();el('tx-cat').value=tx.category;el('tx-date').value=tx.date;el('tx-desc').value=tx.description;el('tx-cur').value=tx.currency;el('tx-amt').value=tx.amount;el('tx-note').value=tx.note||'';el('tx-rec').value=tx.recurring||'';
+    el('tx-btn-save').textContent='Salva modifiche'; el('tx-btn-close').textContent='Annulla';}
+  else{el('tx-type').value='expense';txTypeChange();el('tx-date').value=new Date().toISOString().slice(0,10);['tx-desc','tx-amt','tx-note'].forEach(i=>el(i).value='');el('tx-cur').value='GTQ';el('tx-rec').value='';
+    el('tx-btn-save').textContent='Salva e aggiungi un\u2019altra'; el('tx-btn-close').textContent='Fatto';}
+  el('tx-pfx').textContent=CUR_SYM[el('tx-cur').value]||'Q';
   openModal('m-tx');
+  setTimeout(()=>el('tx-desc')?.focus(),50);
 }
-function txTypeChange(){const t=el('tx-type').value;el('tx-cat').innerHTML=CATS[t].map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');}
-el('tx-cur')?.addEventListener('change',()=>{el('tx-pfx').textContent=CUR_SYM[el('tx-cur').value]||'$';});
+function txTypeChange(){const t=el('tx-type').value;el('tx-cat').innerHTML=CATS[t].map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');populateTxDescList(t);}
+// Suggests past descriptions for the chosen type (most recent first), so
+// recurring entries (affitto, supermercato, stipendio...) are one click away.
+function populateTxDescList(type){
+  const dl=el('tx-desc-list');if(!dl)return;
+  const seen=new Set(),opts=[];
+  [...S.transactions].filter(t=>t.type===type).sort((a,b)=>b.date.localeCompare(a.date)).forEach(t=>{
+    const k=t.description.toLowerCase();
+    if(!seen.has(k)){seen.add(k);opts.push(t.description);}
+  });
+  dl.innerHTML=opts.slice(0,30).map(d=>`<option value="${esc(d)}">`).join('');
+}
+// When the typed description exactly matches a past transaction, silently
+// pre-fill category/currency/note from the most recent match — the details
+// the person is most likely to want, without them re-selecting everything.
+function txDescAutofill(){
+  const desc=el('tx-desc').value.trim();if(!desc)return;
+  const type=el('tx-type').value;
+  const match=[...S.transactions].filter(t=>t.type===type&&t.description.toLowerCase()===desc.toLowerCase()).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  if(!match)return;
+  el('tx-cat').value=match.category;
+  el('tx-cur').value=match.currency;el('tx-pfx').textContent=CUR_SYM[match.currency]||'Q';
+  if(!el('tx-amt').value)el('tx-amt').value=match.amount;
+}
+el('tx-cur')?.addEventListener('change',()=>{el('tx-pfx').textContent=CUR_SYM[el('tx-cur').value]||'Q';});
 function saveTx(){
   const type=el('tx-type').value,date=el('tx-date').value,desc=el('tx-desc').value.trim();
   const cat=el('tx-cat').value,cur=el('tx-cur').value,amt=parseFloat(el('tx-amt').value);
   const note=el('tx-note').value.trim(),rec=el('tx-rec').value;
   if(!date||!desc||!cat||isNaN(amt)||amt<=0){toast('Compila tutti i campi obbligatori!','error');return;}
   const obj={id:editTxId||uid(),type,date,description:desc,category:cat,currency:cur,amount:amt,note,recurring:rec};
-  if(editTxId){const i=S.transactions.findIndex(t=>t.id===editTxId);if(i>=0)S.transactions[i]=obj;toast('Transazione aggiornata','success');}
-  else{S.transactions.push(obj);toast('Transazione salvata','success');if(type==='income')showPrimiziePrompt(amt,cur);}
-  persist();closeModal('m-tx');
-  if(activePage==='transazioni')renderTx();
-  if(activePage==='dashboard')renderDash();
+  const wasEdit=!!editTxId;
+  if(wasEdit){const i=S.transactions.findIndex(t=>t.id===editTxId);if(i>=0)S.transactions[i]=obj;toast('Transazione aggiornata','success');}
+  else{S.transactions.push(obj);toast('Transazione salvata ✅','success');if(type==='income')showPrimiziePrompt(amt,cur);}
+  persist(); // refreshes whichever page is currently visible (dashboard, transazioni, ecc.)
+  if(wasEdit){
+    closeModal('m-tx');
+  } else {
+    // Keep the modal open, ready for the next entry: same type/category/date/currency,
+    // just clear amount/description/note and refocus so several transactions can be
+    // logged back-to-back without reopening the form each time.
+    ['tx-desc','tx-amt','tx-note'].forEach(i=>el(i).value='');
+    el('tx-desc').focus();
+  }
 }
 function showPrimiziePrompt(amt,cur){
   const sugg=amt*(S.tithePct/100);
@@ -1658,7 +1729,7 @@ function openInvModal(id=null){
   editInvId=id;
   el('m-inv-ttl').textContent=id?'✏️ Modifica Asset':'Aggiungi Asset';
   if(id){const i=S.investments.find(x=>x.id===id);if(!i)return;el('inv-name').value=i.name;el('inv-type').value=i.type;el('inv-cur').value=i.currency;el('inv-val').value=i.value;el('inv-cost').value=i.cost||0;el('inv-note').value=i.note||'';el('inv-ethics').value=i.ethics||'ok';}
-  else{['inv-name','inv-val','inv-cost','inv-note'].forEach(x=>el(x).value='');el('inv-type').value='crypto';el('inv-cur').value='USD';el('inv-ethics').value='ok';}
+  else{['inv-name','inv-val','inv-cost','inv-note'].forEach(x=>el(x).value='');el('inv-type').value='crypto';el('inv-cur').value='GTQ';el('inv-ethics').value='ok';}
   openModal('m-inv');
 }
 // ── SNAPSHOT HELPERS ──────────────────────────────────────
@@ -1961,7 +2032,21 @@ function renderDebiti(){
 }
 
 // ── SAT ───────────────────────────────────────────────────
-const SAT_DL=[{date:'2026-01-31',desc:'ISR Annuale 2025 (Régimen General)'},{date:'2026-04-30',desc:'IVA marzo · Pequeño: Q1'},{date:'2026-07-31',desc:'IVA giugno · Pequeño: Q2'},{date:'2026-10-31',desc:'IVA settembre · Pequeño: Q3'},{date:'2027-01-31',desc:'IVA dicembre · Q4 + ISR 2026'}];
+// Guatemalan SAT deadlines follow a fixed yearly pattern (ISR annuale il 31/1,
+// IVA trimestrale Pequeño Contribuyente l'ultimo giorno di apr/lug/ott/gen).
+// Generata per l'anno scorso/corrente/prossimo così la lista resta sempre
+// valida, invece di un elenco di date fisse che smette di aggiornarsi ogni anno.
+function buildSatDeadlines(){
+  const y=new Date().getFullYear();
+  const dl=[];
+  [y-1,y,y+1].forEach(yr=>{
+    dl.push({date:`${yr}-01-31`,desc:`ISR Annuale ${yr-1} (Régimen General)`});
+    dl.push({date:`${yr}-04-30`,desc:`IVA marzo · Pequeño: Q1 ${yr}`});
+    dl.push({date:`${yr}-07-31`,desc:`IVA giugno · Pequeño: Q2 ${yr}`});
+    dl.push({date:`${yr}-10-31`,desc:`IVA settembre · Pequeño: Q3 ${yr}`});
+  });
+  return dl.sort((a,b)=>a.date.localeCompare(b.date));
+}
 function saveSat(){S.satRegime=el('sat-reg').value;persist();renderSat();}
 function renderSat(){
   const r=S.satRegime||'pequeno';if(el('sat-reg'))el('sat-reg').value=r;
@@ -1973,7 +2058,10 @@ function renderSat(){
   const tax=r==='pequeno'?qInc*0.05:Math.max(0,qInc-qExp)*0.05;
   el('sat-est').innerHTML=`<div class="flex jb f13 mb6"><span class="c-su">Entrate Q${q+1} (GTQ)</span><span class="mn fw6">Q ${qInc.toLocaleString('it-IT',{maximumFractionDigits:0})}</span></div>${r!=='pequeno'?`<div class="flex jb f13 mb6"><span class="c-su">Spese Deducibili</span><span class="mn">Q ${qExp.toLocaleString('it-IT',{maximumFractionDigits:0})}</span></div>`:''}<div class="flex jb f13 fw6"><span class="c-am">Imposta Stimata</span><span class="mn c-am">Q ${tax.toLocaleString('it-IT',{maximumFractionDigits:0})} (~$${(tax/S.fxRates.GTQ).toFixed(2)})</span></div><div class="f11 c-fa mt6">⚠️ Stima indicativa. Consulta un contador SAT.</div>`;
   const today=new Date().toISOString().slice(0,10);
-  el('sat-dl').innerHTML=SAT_DL.map(d=>{const past=d.date<today;return`<tr><td class="mn f12">${new Date(d.date+'T12:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'2-digit'})}</td><td class="f12">${esc(d.desc)}</td><td><span class="sat-pill ${past?'sat-d':'sat-u'}">${past?'✓ Passato':'→ Prossimo'}</span></td></tr>`;}).join('');
+  const windowStart=new Date();windowStart.setMonth(windowStart.getMonth()-2);
+  const startStr=windowStart.toISOString().slice(0,10);
+  const dls=buildSatDeadlines().filter(d=>d.date>=startStr);
+  el('sat-dl').innerHTML=dls.map(d=>{const past=d.date<today;return`<tr><td class="mn f12">${new Date(d.date+'T12:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'2-digit'})}</td><td class="f12">${esc(d.desc)}</td><td><span class="sat-pill ${past?'sat-d':'sat-u'}">${past?'✓ Passato':'→ Prossimo'}</span></td></tr>`;}).join('');
   el('sat-tips').innerHTML=`<div class="g2"><div><div class="f12 fw7 c-em mb6">📌 Pequeño Contribuyente</div><div class="f13 c-su" style="line-height:2">• Emetti <strong class="c-di">Facturas FEL</strong> per ogni servizio<br>• Conto business <strong class="c-di">separato dal personale</strong><br>• Resta sotto <strong class="c-di">Q150k/trimestre</strong><br>• Paga il 5% puntualmente — mora 1.5%/mese</div></div><div><div class="f12 fw7 c-am mb6">💡 Ottimizzazione Legale</div><div class="f13 c-su" style="line-height:2">• Internet, software, hosting: <strong class="c-di">costo deducibile</strong><br>• Home office: <strong class="c-di">quota affitto proporzionale</strong><br>• Formazione: <strong class="c-di">costo deducibile</strong><br>• Valuta Régimen se <strong class="c-di">spese &gt;40% entrate</strong></div></div></div>`;
 }
 
@@ -1988,7 +2076,7 @@ function saveBen(){
 }
 function deleteBen(id){S.beneficiari=S.beneficiari.filter(b=>b.id!==id);persist();renderDon();toast('Rimosso','info');}
 function saveDonBud(){S.donBudget={amount:parseFloat(el('don-bamt').value)||0,currency:el('don-bcur').value};persist();closeModal('m-don-bud');renderDon();toast('Budget aggiornato','success');}
-function quickDonBen(id){const b=S.beneficiari.find(x=>x.id===id);el('don-qben').value=id;if(b?.suggestedAmount){el('don-qamt').value=b.suggestedAmount;el('don-qcur').value=b.suggestedCurrency||'USD';el('don-qpfx').textContent=CUR_SYM[b.suggestedCurrency]||'$';}el('don-qdate').value=new Date().toISOString().slice(0,10);el('don-qamt').focus();el('don-qamt').scrollIntoView({behavior:'smooth',block:'center'});}
+function quickDonBen(id){const b=S.beneficiari.find(x=>x.id===id);el('don-qben').value=id;el('don-qcur').value=b?.suggestedCurrency||'GTQ';el('don-qpfx').textContent=CUR_SYM[el('don-qcur').value]||'Q';if(b?.suggestedAmount)el('don-qamt').value=b.suggestedAmount;el('don-qdate').value=new Date().toISOString().slice(0,10);el('don-qamt').focus();el('don-qamt').scrollIntoView({behavior:'smooth',block:'center'});}
 function saveDonazione(){
   const benId=el('don-qben').value,amt=parseFloat(el('don-qamt').value),cur=el('don-qcur').value;
   const date=el('don-qdate').value,note=el('don-qnote').value.trim();
@@ -2013,9 +2101,9 @@ function renderDon(){
   const moTot=sum(moD);el('don-mo').textContent=fmt(moTot,base);el('don-mo-s').textContent=`${moD.length} donazioni · ${monName(thisMon)}`;
   el('don-tot').textContent=fmt(sum(allD),base);el('don-tot-s').textContent=`${allD.length} totali`;
   el('don-bcnt').textContent=S.beneficiari.length;
-  const budUSD=toUSD(S.donBudget.amount||0,S.donBudget.currency||'USD');
+  const budUSD=toUSD(S.donBudget.amount||0,S.donBudget.currency||'GTQ');
   const budBase=fromUSD(budUSD,base);
-  if(budBase>0){el('don-bval').textContent=fmt(budBase,base);el('don-bud-bar-card').style.display='block';const p=Math.min(100,moTot/budBase*100);el('don-bud-bar').style.width=p+'%';el('don-bud-bar').className=`prog-f ${p>=100?'pf-ro':p>=80?'pf-go':'pf-am'}`;el('don-bud-pct').textContent=p.toFixed(0)+'% usato';el('don-bud-l').textContent=`Donato: ${fmt(moTot,base)}`;el('don-bud-r').textContent=`Rimanente: ${fmt(Math.max(0,budBase-moTot),base)}`;el('don-bamt').value=S.donBudget.amount||'';el('don-bcur').value=S.donBudget.currency||'USD';}
+  if(budBase>0){el('don-bval').textContent=fmt(budBase,base);el('don-bud-bar-card').style.display='block';const p=Math.min(100,moTot/budBase*100);el('don-bud-bar').style.width=p+'%';el('don-bud-bar').className=`prog-f ${p>=100?'pf-ro':p>=80?'pf-go':'pf-am'}`;el('don-bud-pct').textContent=p.toFixed(0)+'% usato';el('don-bud-l').textContent=`Donato: ${fmt(moTot,base)}`;el('don-bud-r').textContent=`Rimanente: ${fmt(Math.max(0,budBase-moTot),base)}`;el('don-bamt').value=S.donBudget.amount||'';el('don-bcur').value=S.donBudget.currency||'GTQ';}
   else{el('don-bval').textContent='Non impostato';el('don-bud-bar-card').style.display='none';}
   const bList=el('don-ben-list');
   bList.innerHTML=!S.beneficiari.length?`<div class="empty" style="padding:16px 0"><span class="ei" style="font-size:24px">🤲</span><div class="es">Aggiungi i tuoi beneficiari</div></div>`:
